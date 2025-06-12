@@ -1,0 +1,151 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\geometry{margin=1in}
+
+\title{Stacks and Queues}
+\author{}
+\date{}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{cppstyle}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegray},
+  keywordstyle=\color{blue},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{red},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=none,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  language=C++
+}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Stacks}
+A \textbf{stack} is a Last-In-First-Out (LIFO) data structure. Elements are inserted and removed from the same end, called the \textit{top}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/stacks.png}
+  \caption{Stack operation (from Wikimedia)}
+  \label{fig:stack}
+\end{figure}
+
+\textbf{Linked List Implementation:}
+Each node points to the next element. Insertion and deletion happen at the head of the list.
+
+\begin{lstlisting}[style=cppstyle]
+struct Node {
+  int data;
+  Node* next;
+};
+
+class Stack {
+  Node* top;
+public:
+  Stack() : top(nullptr) {}
+  void push(int x) {
+    Node* n = new Node{x, top};
+    top = n;
+  }
+  void pop() {
+    if (top) {
+      Node* temp = top;
+      top = top->next;
+      delete temp;
+    }
+  }
+  int peek() const { return top->data; }
+  bool empty() const { return top == nullptr; }
+};
+\end{lstlisting}
+
+\textbf{STL: \texttt{std::stack}} is implemented using \texttt{std::deque} by default. It supports \texttt{push()}, \texttt{pop()}, \texttt{top()}, and \texttt{empty()}.
+
+\begin{itemize}
+  \item \textbf{Read:} $\mathcal{O}(1)$ for top element
+  \item \textbf{Insert:} $\mathcal{O}(1)$ at head
+  \item \textbf{Delete:} $\mathcal{O}(1)$ at head
+  \item \textbf{Update:} $\mathcal{O}(1)$ if on top; $\mathcal{O}(n)$ otherwise
+\end{itemize}
+
+\section{Queues}
+A \textbf{queue} is a First-In-First-Out (FIFO) data structure. Insertion occurs at the \textit{rear}, deletion at the \textit{front}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/queues.png}
+  \caption{Queue operation (from Wikimedia)}
+  \label{fig:queue}
+\end{figure}
+
+\textbf{Linked List Implementation:}
+We maintain both front and rear pointers.
+
+\begin{lstlisting}[style=cppstyle]
+struct Node {
+  int data;
+  Node* next;
+};
+
+class Queue {
+  Node* front;
+  Node* rear;
+public:
+  Queue() : front(nullptr), rear(nullptr) {}
+  void enqueue(int x) {
+    Node* n = new Node{x, nullptr};
+    if (rear) rear->next = n;
+    else front = n;
+    rear = n;
+  }
+  void dequeue() {
+    if (front) {
+      Node* temp = front;
+      front = front->next;
+      if (!front) rear = nullptr;
+      delete temp;
+    }
+  }
+  int peek() const { return front->data; }
+  bool empty() const { return front == nullptr; }
+};
+\end{lstlisting}
+
+\textbf{STL: \texttt{std::queue}} uses \texttt{std::deque} internally. \texttt{std::deque} (double-ended queue) supports insertion/removal at both ends in $\mathcal{O}(1)$ time.
+
+\begin{itemize}
+  \item \textbf{Read:} $\mathcal{O}(1)$ at front
+  \item \textbf{Insert:} $\mathcal{O}(1)$ at rear
+  \item \textbf{Delete:} $\mathcal{O}(1)$ at front
+  \item \textbf{Update:} $\mathcal{O}(n)$
+\end{itemize}
+
+\section{Note on \texttt{std::deque}}
+A \texttt{deque} (double-ended queue) allows fast insertions/removals at both front and back. STL uses it as the default underlying container for both \texttt{std::stack} and \texttt{std::queue} for performance.
+
+\section{Practice problem}
+Leetcode Problem 20: \textit{Valid paranthesis}
+
+\url{https://leetcode.com/problems/valid-parentheses/description/}
+
+
+\end{document}

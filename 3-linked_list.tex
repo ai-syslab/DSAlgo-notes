@@ -1,0 +1,229 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+\title{Linked Lists}
+\author{}
+\date{}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{cppstyle}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegray},
+  keywordstyle=\color{blue},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{red},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=none,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  language=C++
+}
+
+\begin{document}
+
+\maketitle
+
+
+\section{Overview}
+
+A \textbf{linked list} is a linear data structure where each element (called a \textit{node}) points to the next, forming a chain. Each node contains:
+\begin{itemize}
+  \item The actual data (here of type \texttt{int})
+  \item A pointer to the next node
+\end{itemize}
+
+The \textbf{head pointer} refers to the first node of the list. It is essential for accessing the list. If the head is \texttt{nullptr}, the list is empty.
+
+\subsection{Advantages over Arrays}
+\begin{itemize}
+  \item Dynamic size: no need to define capacity in advance.
+  \item Efficient insertion/deletion: especially at the head or middle (no shifting required).
+\end{itemize}
+
+\subsection{Disadvantages}
+\begin{itemize}
+  \item Random access is not possible; traversal is sequential.
+  \item Extra memory is used for storing pointers.
+  \item Poorer cache performance compared to arrays.
+\end{itemize}
+
+\section{Visual Representation}
+A simple linked list storing 3, 7, and 10 would look like:
+
+\[
+\texttt{head} \rightarrow 
+\fbox{3\ $|$\ $\texttt{*}$} \rightarrow 
+\fbox{7\ $|$\ $\texttt{*}$} \rightarrow 
+\fbox{10\ $|$\ \texttt{NULL}}
+\]
+
+Each box represents a node storing an integer and a pointer to the next node.
+
+\section{Node Structure and Linked List Class}
+
+\begin{lstlisting}[style=cppstyle]
+
+
+#ifndef LINKEDLIST_H
+#define LINKEDLIST_H
+
+struct Node {
+    int data;
+    Node* next;
+    Node(int val);
+};
+
+class LinkedList {
+private:
+    Node* head;
+
+public:
+    LinkedList();
+    ~LinkedList();
+
+    void insertAtHead(int val);
+    void insertAtEnd(int val);
+    void deleteValue(int val);
+    void print() const;
+};
+
+#endif
+
+#include <iostream>
+#include "LinkedList.h"
+
+Node::Node(int val) : data(val), next(nullptr) {}
+
+LinkedList::LinkedList() : head(nullptr) {}
+
+LinkedList::~LinkedList() {
+    Node* curr = head;
+    while (curr) { // Until current node is null ptr
+        Node* temp = curr;
+        curr = curr->next;
+        delete temp;
+    }
+}
+
+void LinkedList::insertAtHead(int val) {
+    Node* newNode = new Node(val);
+    newNode->next = head;
+    head = newNode;
+}
+
+void LinkedList::insertAtEnd(int val) {
+    Node* newNode = new Node(val);
+    if (!head) { // List empty
+        head = newNode;
+        return;
+    }
+    Node* temp = head;
+    while (temp->next) // Until next node is nullptr
+        temp = temp->next;
+    temp->next = newNode;
+}
+
+void LinkedList::deleteValue(int val) {
+    // If the list is empty, nothing to delete
+    if (!head) return;
+
+    // Check if the head node is the one to delete
+    if (head->data == val) {
+        Node* temp = head;        // Save the current head
+        head = head->next;        // Move head to the next node
+        delete temp;              // Delete the old head
+        return;
+    }
+
+    // Traverse the list to find the node before the one to delete
+    Node* curr = head;
+    while (curr->next && curr->next->data != val) {
+        curr = curr->next;
+    }
+
+    // If the node was found, delete it
+    if (curr->next) {
+        Node* temp = curr->next;              // Node to delete
+        curr->next = curr->next->next;        // Bypass the node
+        delete temp;                          // Free memory
+    }
+}
+
+void LinkedList::print() const {
+    Node* temp = head;
+    while (temp) {
+        std::cout << temp->data << " -> ";
+        temp = temp->next;
+    }
+    std::cout << "NULL\n";
+}
+
+\end{lstlisting}
+
+\subsection{Doubly Linked Lists}
+
+A \textbf{doubly linked list} allows traversal in both directions. Each node has:
+\begin{itemize}
+  \item A data field
+  \item A pointer to the next node
+  \item A pointer to the previous node
+\end{itemize}
+
+\begin{lstlisting}[style=cppstyle]
+struct DNode {
+    int data;
+    DNode* prev;
+    DNode* next;
+    DNode(int val) : data(val), prev(nullptr), next(nullptr) {}
+};
+\end{lstlisting}
+
+\subsection{Templated Linked List}
+
+A generic linked list using templates:
+
+\begin{lstlisting}[style=cppstyle]
+template <typename T>
+struct Node {
+    T data;
+    Node* next;
+    Node(T val) : data(val), next(nullptr) {}
+};
+\end{lstlisting}
+
+This allows storing any data type: \texttt{int}, \texttt{double}, \texttt{std::string}, or user-defined objects, with the same logic as above reused across types.
+
+
+
+\section{Time Complexity (Big-O)}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Operation} & \textbf{Time Complexity} \\
+\hline
+Read   & $O(n)$ \\
+Insert & $O(1)$ \\
+Delete & $O(1)$ \\
+Update & $O(n)$ \\
+\hline
+\end{tabular}
+
+\begin{itemize}
+    \item Read and Update are linear-time operations: $O(n)$
+    \item Insert and Delete are constant-time if a pointer to the location is available (head/tail): $O(1)$
+\end{itemize}
+
+\end{document}

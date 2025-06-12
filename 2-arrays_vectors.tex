@@ -1,0 +1,144 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\geometry{margin=1in}
+
+\title{Arrays and Vectors}
+\author{}
+\date{}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{cppstyle}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegray},
+  keywordstyle=\color{blue},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{red},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=none,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  language=C++
+}
+
+\begin{document}
+
+\maketitle
+
+
+
+\section{Arrays}
+Data is arranged in contiguous memory locations.
+
+\section{Data Structures}
+Data structures define how data is stored in memory and typically support the following operations:
+
+\begin{enumerate}
+    \item Read
+    \item Insert
+    \item Delete
+    \item Update
+\end{enumerate}
+
+\section{Create}
+
+\begin{itemize}
+    \item Integer Array (fixed size): \verb|int A[100];|
+    \item Integer Vector (dynamic size): \verb|std::vector<int> vec;|
+\end{itemize}
+
+\section{Read}
+Read the $i$-th element:
+\begin{itemize}
+    \item Array: \verb|A[i]|
+    \item Vector: \verb|vec.at(i)|
+\end{itemize}
+
+\section{Insert}
+Insert element at position $i$:
+
+\paragraph{Vector:}
+\begin{verbatim}
+vec.insert(vec.begin() + i, element)
+\end{verbatim}
+
+\paragraph{Array:} 
+To insert an element at the $i$-th location:
+\begin{itemize}
+    \item Shift all elements from index $i+1$ onward one position back.
+    \item Insert the new element at index $i$.
+    \item Requires pre-allocated space.
+\end{itemize}
+
+\paragraph{Vector (internal mechanism):}
+\begin{itemize}
+    \item If no space, a new dynamic array (typically twice the size) is allocated on the heap.
+    \item Existing elements are copied over.
+    \item The old array is deallocated.
+\end{itemize}
+
+\section{Delete}
+Delete element at position $i$:
+
+\paragraph{Vector:}
+\begin{verbatim}
+vec.erase(vec.begin() + i)
+\end{verbatim}
+
+\paragraph{Array:} 
+\begin{itemize}
+    \item Shift all elements from index $i+1$ onward one position forward.
+    \item This leaves wasted space in the array, since the size doesn't shrink.
+\end{itemize}
+
+\paragraph{Vector (internal mechanism):}
+\begin{itemize}
+    \item If the number of elements falls below half the capacity, a new dynamic array (half the size) is allocated.
+    \item Elements are copied over, and the old one is deallocated.
+\end{itemize}
+
+\section{Update}
+Update element at position $i$:
+
+\begin{itemize}
+    \item Array: \verb|A[i] = new_val;|
+    \item Vector: \verb|vec[i] = new_val;|
+\end{itemize}
+
+\section{Time Complexity (Big-O)}
+
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Operation} & \textbf{Time Complexity} \\
+\hline
+Read   & $O(1)$ \\
+Insert & $O(n)$ \\
+Delete & $O(n)$ \\
+Update & $O(1)$ \\
+\hline
+\end{tabular}
+
+\begin{itemize}
+    \item Read and Update are constant-time operations: $O(1)$
+    \item Insert and Delete are linear-time in the worst case: $O(n)$
+\end{itemize}
+
+\section{Practice Problem}
+Leetcode Problem 27: \textit{Remove Element}
+
+\url{https://leetcode.com/problems/remove-element/description/}
+
+\end{document}
