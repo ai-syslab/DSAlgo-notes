@@ -46,6 +46,9 @@ A \textbf{Binary Search Tree (BST)} is a binary tree where each node contains a 
 \]
 This ordering enables efficient searching, insertion, and deletion operations.
 
+Similar to hashtables, they are used to store key-value pairs. However unlike hashtables, BSTs maintain keys in sorted order.
+
+
 \section{Example BST Structure}
 
 \begin{center}
@@ -67,6 +70,7 @@ This ordering enables efficient searching, insertion, and deletion operations.
     child[missing]
     child {node {14}
       child {node {13}}
+      child {node {null}}
     }
   };
 \end{tikzpicture}
@@ -123,7 +127,7 @@ Hence, insertion, search, and deletion all take $\mathcal{O}(\log n)$ time on av
 \subsection{C++ Implementation of a BST}
 
 \begin{lstlisting}[style=cppstyle]
-#include <iostream>
+#include 
 using namespace std;
 
 struct BSTNode {
@@ -136,9 +140,30 @@ struct BSTNode {
 
 class BST {
 public:
-  BSTNode* root;
-
   BST() : root(nullptr) {}
+
+  void insert(int key) {
+    root = insert(root, key);
+  }
+
+  bool search(int key) const {
+    return search(root, key);
+  }
+
+  int min() const {
+    BSTNode* node = min(root);
+    if (node) return node->key;
+      throw runtime_error("Tree is empty");
+  }
+
+  int max() const {
+    BSTNode* node = max(root);
+    if (node) return node->key;
+      throw runtime_error("Tree is empty");
+  }
+
+private:
+  BSTNode* root;
 
   BSTNode* insert(BSTNode* node, int key) {
     if (!node) return new BSTNode(key);
@@ -158,22 +183,26 @@ public:
       return search(node->right, key);
   }
 
-  void insert(int key) {
-    root = insert(root, key);
+  BSTNode* min(BSTNode* node) const {
+    if (!node) return nullptr;
+    while (node->left)
+        node = node->left;
+    return node;
   }
 
-  bool search(int key) const {
-    return search(root, key);
+  BSTNode* max(BSTNode* node) const {
+    if (!node) return nullptr;
+    while (node->right)
+        node = node->right;
+    return node;
   }
+
 };
 \end{lstlisting}
 
-\subsection{Tree Traversals}
-Traversal orders commonly used with BSTs:
-
-\textbf{Inorder Traversal (Left → Root → Right):} Produces sorted order  
+\textbf{Inorder Traversal (Left → Root → Right):}
 \begin{lstlisting}[style=cppstyle]
-void inorder(BSTNode* node) {
+void inorder(BSTNode* node) const {
   if (!node) return;
   inorder(node->left);
   cout << node->key << " ";
@@ -282,79 +311,7 @@ Node \textbf{7} has no right subtree. To find its inorder successor:
 \end{itemize}
 
 Therefore, the inorder successor of node \textbf{7} is \textbf{8}.
-\\
 
-
-\textbf{C++ Implementation:}
-
-\subsubsection*{Deletion Using \texttt{inorderSuccessor}}
-
-\begin{lstlisting}[style=cppstyle]
-// Full-tree inorderSuccessor version used here
-BSTNode* deleteNode(BSTNode* root, int key) {
-  if (!root) return nullptr;
-
-  if (key < root->key)
-    root->left = deleteNode(root->left, key);
-  else if (key > root->key)
-    root->right = deleteNode(root->right, key);
-  else {
-    // Case 1 and 2: Node with 0 or 1 child
-    if (!root->left) {
-      BSTNode* temp = root->right;
-      delete root;
-      return temp;
-    } else if (!root->right) {
-      BSTNode* temp = root->left;
-      delete root;
-      return temp;
-    }
-
-    // Case 3: Node with 2 children
-    BSTNode* succ = inorderSuccessor(root, root); // full-tree root and current node
-    root->key = succ->key;
-    root->right = deleteNode(root->right, succ->key);
-  }
-  return root;
-}
-\end{lstlisting}
-
-
-
-
-\subsubsection*{Deletion Function in C++}
-
-\begin{lstlisting}[style=cppstyle]
-BSTNode* deleteNode(BSTNode* root, int key) {
-  if (!root) return nullptr;
-
-  if (key < root->key)
-    root->left = deleteNode(root->left, key);
-  else if (key > root->key)
-    root->right = deleteNode(root->right, key);
-  else {
-    // Case 1 and 2: Node with 0 or 1 child
-    if (!root->left) {
-      BSTNode* temp = root->right;
-      delete root;
-      return temp;
-    }
-    else if (!root->right) {
-      BSTNode* temp = root->left;
-      delete root;
-      return temp;
-    }
-
-    // Case 3: Node with 2 children
-    BSTNode* succ = findMin(root->right);
-    root->key = succ->key;
-    root->right = deleteNode(root->right, succ->key);
-  }
-  return root;
-}
-\end{lstlisting}
-
-\textbf{Note:} The deletion algorithm maintains the BST invariant by rearranging nodes appropriately. If balance is not preserved, performance can degrade to $\mathcal{O}(n)$.
 
 \subsection{Degenerate Cases and Balancing}
 
@@ -505,6 +462,35 @@ All relative key orderings are preserved, satisfying:
 
 
 Both left and right rotations preserve in-order traversal and relative ordering of keys. Hence, the BST property remains intact after any single rotation.
+
+
+\section{std::map and std::set in C++ STL}
+
+The C++ Standard Template Library (STL) provides \verb|std::map| and \verb|std::set| as associative containers that store elements in sorted order.
+
+\verb|std::map| stores key-value pairs where keys are unique and each key maps to a corresponding value.  
+\verb|std::set| stores unique keys without associated values.
+
+Both containers are typically implemented using a balanced binary search tree, most commonly a \emph{Red-Black Tree}. This ensures that insertions, deletions, and lookups have logarithmic time complexity: $O(\log n)$.
+
+Key properties:
+\begin{itemize}
+  \item Elements are kept sorted according to the comparison function (default: \verb|operator<|).
+  \item Iteration over \verb|map| or \verb|set| yields elements in sorted order.
+  \item Efficient operations such as range queries, lower and upper bound searches, and equal range queries are supported.
+\end{itemize}
+
+\paragraph{Relation to Binary Search Trees.}  
+\verb|std::map| and \verb|std::set| are abstracted interfaces over balanced binary search trees. These containers provide the ordered behavior and logarithmic performance characteristics of binary search trees while hiding the tree operations from the user.
+
+\paragraph{Contrast with Hash-Based Containers.}  
+Unlike \verb|std::unordered_map| and \verb|std::unordered_set|, which use hash tables:
+\begin{itemize}
+  \item \verb|map| and \verb|set| maintain elements in order.
+  \item Lookup, insertion, and deletion are $O(\log n)$ rather than average $O(1)$ (hash containers) but no ordering.
+  \item \verb|map| and \verb|set| support ordered range operations; hash containers do not.
+\end{itemize}
+
 
 \section{Practice problem}
 Leetcode Problem 108: \textit{Convert Sorted Array to Binary Search Tree}
