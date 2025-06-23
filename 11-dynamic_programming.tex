@@ -1,0 +1,259 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{trees, positioning}
+\geometry{margin=1in}
+
+\title{Dynamic Programming}
+\author{}
+\date{}
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{cppstyle}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegray},
+  keywordstyle=\color{blue},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{red},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=none,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  tabsize=2,
+  language=C++
+}
+
+\begin{document}
+
+\maketitle
+
+Algorithm design strategies seen thus far:
+\begin{itemize}
+    \item Brute force — exhaustively consider through all possibilities
+    \item Divide and conquer — examples: binary search, mergesort, quicksort, Karatsuba
+    \item Greedy algorithm — examples: Prim's algorithm for minimum spanning tree, Dijkstra's algorithm for single source shortest path
+    \item Dynamic programming — this lecture
+\end{itemize}
+
+\section{Definitions}
+
+Dynamic Programming is an algorithmic paradigm: It is used when the solution can be recursively described in terms of solutions to subproblems (optimal substructure).
+
+\textbf{Memoization:} Algorithm finds solutions to subproblems and stores them in memory for later use.  
+More efficient than brute-force methods, which solve the same subproblems over and over again.
+
+Typically solved bottom-up, building a table of solved subproblems that are used to solve larger ones.  
+A big difference from the divide and conquer paradigm is that unlike divide and conquer the subproblems overlap.
+
+The word programming is historical, and was chosen by Richard Bellman to describe a program in the sense of a schedule.
+
+We study a number of examples to see Dynamic programming in action.
+
+\section{Example 1 — Fibonacci series}
+
+The Fibonacci series can be recursively expressed as:
+\[
+F_n = F_{n-1} + F_{n-2}
+\]
+with \(F_0 = 0\), and \(F_1 = 1\).
+
+\[
+F_2 = F_1 + F_0,\quad F_3 = F_1 + F_2, \ \text{and so on}
+\]
+
+\begin{lstlisting}[style=cppstyle]
+int fibonacci(int n) {
+    if (n == 0) return 0;
+    if (n == 1) return 1;
+    return fibonacci(n-1) + fibonacci(n-2);
+}
+\end{lstlisting}
+
+The naive recursive solution has exponential in \(n\) run time — \(O(c^n)\) where \(c\) is a constant. The exponential run time happens because of repeatedly solving the same subproblems.
+
+\textbf{Dynamic programming solution with memoization — Top down approach}
+
+Idea: Cache (memoize) computed results. For any new computation, check cache to see if it holds the result, or else recurse.
+
+\begin{lstlisting}[style=cppstyle]
+vector<int> A(n+1, -1); // For memoization
+A[0] = 0;
+A[1] = 1;
+
+int fibonacci(int n) {
+    if (A[n] != -1) // Result in cache
+        return A[n];
+    else
+        A[n] = fibonacci(n-1) + fibonacci(n-2); // Cache result
+    return A[n];
+}
+\end{lstlisting}
+
+\textbf{Dynamic programming solution with tabulation — Bottom up approach}
+
+Idea: Build a table of partial results from the bottom up.
+
+\begin{lstlisting}[style=cppstyle]
+int fibonacci(int n) {
+    vector<int> A(n+1);
+    A[0] = 0;
+    A[1] = 1;
+    for (int i = 2; i <= n; i++) {
+        A[i] = A[i-1] + A[i-2];
+    }
+    return A[n];
+}
+\end{lstlisting}
+
+Time: \(O(n)\)  
+Space: \(O(n)\)  
+Turns out you don't need a whole array. All you need is the last two numbers (two variables). So the space required is only \(O(1)\).
+
+\section{Example 2 — Rod cutting problem}
+
+You are given a rod of size \(n > 0\), it can be cut into any number of pieces \(k\) (\(k \le n\)). Price for each piece of size \(i\) is represented as \(p(i)\) and maximum revenue from a rod of size \(i\) is \(r(i)\) (could be split into multiple pieces). Find maximum \(r(n)\) for the rod of size \(n\).
+
+For example, here’s an array of prices where the array index + 1 indicates rod length:
+\[
+p = \{1, 5, 8, 9, 10, 17, 17, 20\}
+\]
+
+The price of a rod of length 2 is 5.
+
+Example: What is the best price for a rod of length 3?
+
+\begin{itemize}
+    \item Break into 3 pieces of length 1: \$3
+    \item Break into 1 piece of length 2 and 1 piece of length 1: \$6
+    \item Don't break the rod: \$8
+\end{itemize}
+
+Best price: don't cut the rod.
+
+Example for rod of length 4: breaking up into 2 and 2 yields \$10.
+
+Let's build some intuition:
+
+\begin{itemize}
+    \item Length 1: only possibility price \$1
+    \item Length 2: \$2 (cut) or \$5 (uncut) → uncut is better
+    \item Length 3: possibilities (0,3), (1,2) → max(8,6) = 8
+    \item Length 4: (0,4), (1,3), (2,2) → max(9,9,10) = 10
+\end{itemize}
+
+General algorithm:
+
+\begin{lstlisting}[style=cppstyle]
+int rodCutting(const vector<int>& P, int n) {
+    vector<int> maxP(n+1, 0);
+    for (int i = 1; i <= n; i++) {
+        int maxVal = P[i-1];
+        for (int j = 1; j <= i/2; j++) {
+            maxVal = max(maxVal, maxP[j] + maxP[i-j]);
+        }
+        maxP[i] = maxVal;
+    }
+    return maxP[n];
+}
+\end{lstlisting}
+
+Complexity: \(O(n^2)\)
+
+\subsection*{Example 3 — Max sum of non adjacent elements}
+
+Given an array of positive integers, find the maximum sum of non adjacent elements.
+
+Example: [75, 105, 120, 75, 90, 135]  
+Ans: 330 = 75 + 120 + 135
+
+General approach:
+
+\begin{lstlisting}[style=cppstyle]
+int maxSumNonAdj(const vector<int>& in) {
+    int n = in.size();
+    vector<int> maxSum(n);
+    maxSum[0] = in[0];
+    maxSum[1] = max(in[0], in[1]);
+    for (int i = 2; i < n; i++) {
+        maxSum[i] = max(maxSum[i-1], maxSum[i-2] + in[i]);
+    }
+    return maxSum[n-1];
+}
+\end{lstlisting}
+
+\section{Example 4 — Levenshtein Distance (Edit distance)}
+
+The Levenshtein distance between two words is the minimum number of single character edits (insertions, deletions, or substitutions) required to change one word to another. Each operation has unit cost.
+
+Example: kitten → sitting = 3 edits
+
+General formula:
+
+\begin{itemize}
+    \item If min(i,j)=0, dist[i][j] = max(i,j)
+    \item If X[i] == Y[j], dist[i][j] = dist[i-1][j-1]
+    \item Else dist[i][j] = 1 + min(dist[i-1][j], dist[i][j-1], dist[i-1][j-1])
+\end{itemize}
+
+\begin{lstlisting}[style=cppstyle]
+int editDistance(const string& X, const string& Y) {
+    int m = X.size(), n = Y.size();
+    vector<vector<int>> dist(m+1, vector<int>(n+1));
+
+    for (int i = 0; i <= m; i++) dist[i][0] = i;
+    for (int j = 0; j <= n; j++) dist[0][j] = j;
+
+    for (int i = 1; i <= m; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (X[i-1] == Y[j-1])
+                dist[i][j] = dist[i-1][j-1];
+            else
+                dist[i][j] = 1 + min({dist[i-1][j], dist[i][j-1], dist[i-1][j-1]});
+        }
+    }
+    return dist[m][n];
+}
+\end{lstlisting}
+
+Complexity: \(O(mn)\)
+
+\section{Example 5 — Knapsack problem (1/0)}
+
+Given items with values \(V_i\) and weights \(W_i\), capacity \(W\), maximize value without exceeding \(W\).
+
+\begin{lstlisting}[style=cppstyle]
+int knapsack(const vector<int>& V, const vector<int>& W, int capacity) {
+    int n = V.size();
+    vector<vector<int>> dp(n+1, vector<int>(capacity+1, 0));
+    for (int i = 1; i <= n; i++) {
+        for (int w = 0; w <= capacity; w++) {
+            if (W[i-1] <= w)
+                dp[i][w] = max(dp[i-1][w], dp[i-1][w - W[i-1]] + V[i-1]);
+            else
+                dp[i][w] = dp[i-1][w];
+        }
+    }
+    return dp[n][capacity];
+}
+\end{lstlisting}
+
+Complexity: \(O(nW)\)
+
+\section{More Examples}
+
+See: \url{https://www.techiedelight.com/Category/dynamic-programming/}
+
+\end{document}
